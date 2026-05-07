@@ -16,8 +16,8 @@ Expected result: worse than per-arm because
   3. Single diffusion in N-dim space vs N independent 1D diffusions
 
 Usage:
-    conda run -n bayesian_rmab python diffusion_joint_N_ablation.py
-    conda run -n bayesian_rmab python diffusion_joint_N_ablation.py --N 20 --K 5 --epochs 200
+    conda run -n bird-rmab python diffusion_joint_N_ablation.py
+    conda run -n bird-rmab python diffusion_joint_N_ablation.py --N 20 --K 5 --epochs 200
 """
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-name: bayesian_rmab
+name: bird-rmab
 channels:
   - conda-forge
   - defaults

@@ -8,7 +8,7 @@ to regenerate the paper figures and appendix tables for BIRD.
 From the repository root, activate the project environment and run:
 
 ```bat
-conda activate bayesian_rmab
+conda activate bird-rmab
 python plot\verify_paper_inputs.py
 run_all.bat
 ```
