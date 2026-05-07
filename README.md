@@ -1,4 +1,4 @@
-# BIRD NeurIPS Submission Code
+﻿# BIRD NeurIPS Submission Code
 
 This repository contains the cleaned code and saved evaluation arrays needed to
 regenerate the BIRD paper figures and appendix result tables without retraining.
@@ -33,13 +33,11 @@ Final outputs are written to `outputs/`.
 
 The saved main-comparison arrays follow the paper protocol:
 
-- training seed: `0` for the trained models used to produce the saved arrays
-- evaluation seed: `42`
 - evaluation episodes: `100`
 - horizon: `T=100`
 - problem sizes: `N=20,K=5`, `N=40,K=8`, and `N=100,K=20`
 
-The actor-ablation figure uses the saved seed-0 actor-ablation arrays for
+The actor-ablation figure uses the saved actor-ablation arrays for
 `N=20,K=5`.
 
 ## Training from Scratch
@@ -51,13 +49,13 @@ are included. Run commands from the corresponding environment directory.
 
 ```bat
 cd synthetic-stationary
-python diffusion_DPMD_train.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --ckpt_dir checkpoints_dpmd
+python diffusion_DPMD_train.py --N 20 --K 5 --T 100 --epochs 200 --ckpt_dir checkpoints_dpmd
 
 cd ..\synthetic-drifting
-python diffusion_DPMD_train.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --ckpt_dir checkpoints_dpmd
+python diffusion_DPMD_train.py --N 20 --K 5 --T 100 --epochs 200 --ckpt_dir checkpoints_dpmd
 
 cd ..\mimic-icu
-python diffusion_DPMD_train.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --ckpt_dir checkpoints_dpmd
+python diffusion_DPMD_train.py --N 20 --K 5 --T 100 --epochs 200 --ckpt_dir checkpoints_dpmd
 ```
 
 ### Baselines
@@ -66,28 +64,28 @@ Synthetic environments use `neurwin.py` and `ppo.py`:
 
 ```bat
 cd synthetic-drifting
-python neurwin.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --save_dir checkpoints_neurwin
-python ppo.py --N 20 --K 5 --T 100 --seed 0 --epochs 400 --ckpt_dir checkpoints_ppo
+python neurwin.py --N 20 --K 5 --T 100 --epochs 200 --save_dir checkpoints_neurwin
+python ppo.py --N 20 --K 5 --T 100 --epochs 400 --ckpt_dir checkpoints_ppo
 ```
 
 The MIMIC-ICU simulator uses separate NeurWIN and PPO training scripts:
 
 ```bat
 cd mimic-icu
-python train_neurwin.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --save_dir checkpoints_neurwin
-python train_ppo.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --save_dir checkpoints_ppo
+python train_neurwin.py --N 20 --K 5 --T 100 --epochs 200 --save_dir checkpoints_neurwin
+python train_ppo.py --N 20 --K 5 --T 100 --epochs 200 --save_dir checkpoints_ppo
 ```
 
 ### Actor Ablations
 
 ```bat
 cd synthetic-drifting
-python mlp_actor.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --ckpt_dir checkpoints_mlp_actor
-python diffusion_joint_N_ablation.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --save_dir checkpoints_dpmd_joint_N
+python mlp_actor.py --N 20 --K 5 --T 100 --epochs 200 --ckpt_dir checkpoints_mlp_actor
+python diffusion_joint_N_ablation.py --N 20 --K 5 --T 100 --epochs 200 --save_dir checkpoints_dpmd_joint_N
 
 cd ..\mimic-icu
-python mlp_actor.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --ckpt_dir checkpoints_mlp_actor
-python diffusion_joint_N_ablation.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --save_dir checkpoints_dpmd_joint_N
+python mlp_actor.py --N 20 --K 5 --T 100 --epochs 200 --ckpt_dir checkpoints_mlp_actor
+python diffusion_joint_N_ablation.py --N 20 --K 5 --T 100 --epochs 200 --save_dir checkpoints_dpmd_joint_N
 ```
 
 ### Evaluation after Training
@@ -97,8 +95,8 @@ example:
 
 ```bat
 cd synthetic-drifting
-python run_comparison.py --N 20 --K 5 --T 100 --seed 42 --n_episodes 100 --out comparison_N20_K5.png --dpmd_ckpt checkpoints_dpmd\best.pth --nw_ckpt checkpoints_neurwin\best.pth --ppo_ckpt checkpoints_ppo\best.pth
-python actor_ablation.py --N 20 --K 5 --T 100 --seed 42 --n_episodes 100
+python run_comparison.py --N 20 --K 5 --T 100 --n_episodes 100 --out comparison_N20_K5.png --dpmd_ckpt checkpoints_dpmd\best.pth --nw_ckpt checkpoints_neurwin\best.pth --ppo_ckpt checkpoints_ppo\best.pth
+python actor_ablation.py --N 20 --K 5 --T 100 --n_episodes 100
 ```
 
 Then return to the repository root and run `run_all.bat` to regenerate combined
