@@ -1,0 +1,143 @@
+{
+  "obs_dim": 9,
+  "state_dim": 3,
+  "M": 4,
+  "vital_names": [
+    "heart_rate",
+    "sbp",
+    "mbp",
+    "spo2",
+    "resp_rate"
+  ],
+  "meta_names": [
+    "temperature",
+    "glucose"
+  ],
+  "vital_mean": [
+    80.0,
+    120.0,
+    80.0,
+    94.0,
+    18.0
+  ],
+  "vital_scale": [
+    20.0,
+    25.0,
+    15.0,
+    4.0,
+    6.0
+  ],
+  "vital_sign": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    -1.0
+  ],
+  "meta_mean": [
+    37.0,
+    120.0
+  ],
+  "meta_scale": [
+    1.0,
+    40.0
+  ],
+  "meta_sign": [
+    1.0,
+    -1.0
+  ],
+  "loading_matrix": [
+    [
+      0.4766034879617047,
+      -0.18523693004859204
+    ],
+    [
+      1.1006079077526953,
+      0.06545121119623688
+    ],
+    [
+      1.3882894382108768,
+      0.11988205553993074
+    ],
+    [
+      0.08502382706226053,
+      0.7814982686649976
+    ],
+    [
+      -0.08502382706226072,
+      1.2185017313350026
+    ]
+  ],
+  "meta_loadings": [
+    [
+      0.5,
+      0.5
+    ],
+    [
+      0.0,
+      -0.0006611236523854903
+    ]
+  ],
+  "p_obs_meta": [
+    0.05,
+    0.75
+  ],
+  "types": {
+    "0": {
+      "name": "septic_shock",
+      "count": 6114,
+      "alpha_hemo": 0.4554,
+      "alpha_resp": 0.6452,
+      "beta_hemo": 0.0,
+      "beta_resp": 0.0,
+      "drift_hemo": 0.1122,
+      "drift_resp": 0.0616,
+      "sigma_hemo": 0.3878,
+      "sigma_resp": 0.3638,
+      "c_rh": -0.0302,
+      "c_hr": -0.0253
+    },
+    "1": {
+      "name": "resp_failure",
+      "count": 6209,
+      "alpha_hemo": 0.6532,
+      "alpha_resp": 0.4,
+      "beta_hemo": 0.0,
+      "beta_resp": 0.0,
+      "drift_hemo": 0.054,
+      "drift_resp": 0.1866,
+      "sigma_hemo": 0.3496,
+      "sigma_resp": 0.3703,
+      "c_rh": 0.002,
+      "c_hr": -0.0717
+    },
+    "2": {
+      "name": "hemo_instability",
+      "count": 6416,
+      "alpha_hemo": 0.4,
+      "alpha_resp": 0.4,
+      "beta_hemo": 0.0,
+      "beta_resp": 0.0,
+      "drift_hemo": -0.0984,
+      "drift_resp": 0.2353,
+      "sigma_hemo": 0.3555,
+      "sigma_resp": 0.3622,
+      "c_rh": 0.0103,
+      "c_hr": -0.0243
+    },
+    "3": {
+      "name": "recovering",
+      "count": 927,
+      "alpha_hemo": 0.4235,
+      "alpha_resp": 0.4,
+      "beta_hemo": -0.2014,
+      "beta_resp": 0.2879,
+      "drift_hemo": 0.0244,
+      "drift_resp": 0.0422,
+      "sigma_hemo": 0.3857,
+      "sigma_resp": 0.3982,
+      "c_rh": 0.0009,
+      "c_hr": -0.0334
+    }
+  }
+}

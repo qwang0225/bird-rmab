@@ -1,0 +1,17 @@
+name: bayesian_rmab
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.13.7
+  - pip
+  - numpy=2.4.4
+  - matplotlib=3.10.8
+  - scipy=1.16.2
+  - pandas=2.3.3
+  - ipykernel=6.30.1
+  - pip:
+      # Matches the environment used to regenerate the paper figures locally.
+      # For CPU-only machines, replace the index URL with PyPI's default torch wheel.
+      - --index-url https://download.pytorch.org/whl/cu126
+      - torch==2.9.1

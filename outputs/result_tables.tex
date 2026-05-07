@@ -1,0 +1,39 @@
+\begin{table*}[t]
+  \centering
+  \caption{Main comparison across problem sizes. Values are mean episode return \(\pm\) standard deviation over 100 evaluation episodes with different seeds.}
+  \label{tab:main-comparison-all-sizes}
+  \scriptsize
+  \begin{tabular}{cclcccccc}
+    \toprule
+    \(N\) & \(K\) & Environment & Random & Greedy & NeurWIN & PPO & BIRD & Oracle \\
+    \midrule
+    20 & 5 & Stationary & 2304.1 $\pm$ 480.0 & 5731.4 $\pm$ 831.9 & 4719.4 $\pm$ 1122.1 & 5651.3 $\pm$ 863.1 & \textbf{6203.2 $\pm$ 444.5} & 6971.6 $\pm$ 429.7 \\
+     &  & Drifting & 2431.1 $\pm$ 509.1 & 5940.2 $\pm$ 980.8 & 4512.2 $\pm$ 1389.8 & 6000.3 $\pm$ 894.1 & \textbf{7033.3 $\pm$ 607.2} & 7448.3 $\pm$ 613.5 \\
+     &  & MIMIC-ICU Simulator & 792.4 $\pm$ 80.8 & 640.3 $\pm$ 94.8 & 934.7 $\pm$ 127.2 & 826.7 $\pm$ 92.7 & \textbf{1054.5 $\pm$ 54.3} & 1212.4 $\pm$ 48.8 \\
+    \midrule
+    40 & 8 & Stationary & 3160.6 $\pm$ 560.9 & 8920.6 $\pm$ 1049.0 & 7408.8 $\pm$ 1333.6 & 9005.0 $\pm$ 1106.8 & \textbf{9870.9 $\pm$ 434.3} & 11438.0 $\pm$ 543.7 \\
+     &  & Drifting & 3310.7 $\pm$ 589.4 & 9259.1 $\pm$ 1211.1 & 7195.9 $\pm$ 1759.0 & 7413.1 $\pm$ 1664.7 & \textbf{11163.9 $\pm$ 710.4} & 12324.5 $\pm$ 655.5 \\
+     &  & MIMIC-ICU Simulator & 1318.1 $\pm$ 90.1 & 1057.8 $\pm$ 107.6 & 1570.2 $\pm$ 156.9 & 1517.0 $\pm$ 182.6 & \textbf{1735.3 $\pm$ 63.5} & 2056.7 $\pm$ 58.5 \\
+    \midrule
+    100 & 20 & Stationary & 7790.3 $\pm$ 908.6 & 22195.4 $\pm$ 1766.4 & 19094.3 $\pm$ 2093.9 & 22592.6 $\pm$ 1835.2 & \textbf{24325.6 $\pm$ 630.9} & 28646.7 $\pm$ 910.0 \\
+     &  & Drifting & 8212.6 $\pm$ 993.3 & 23367.9 $\pm$ 1842.7 & 18395.0 $\pm$ 2611.3 & 22396.1 $\pm$ 2270.0 & \textbf{27662.4 $\pm$ 1154.0} & 30869.6 $\pm$ 1176.5 \\
+     &  & MIMIC-ICU Simulator & 3266.1 $\pm$ 139.3 & 2597.8 $\pm$ 163.9 & 3984.2 $\pm$ 212.5 & 3406.8 $\pm$ 172.0 & \textbf{4254.5 $\pm$ 90.3} & 5144.2 $\pm$ 86.7 \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\begin{table}[h]
+  \centering
+  \caption{Actor ablation at \(N=20,K=5\). Values are mean episode return \(\pm\) standard deviation over 100 evaluation episodes with different seeds.}
+  \label{tab:actor-ablation-n20}
+  \small
+  \begin{tabular}{lccc}
+    \toprule
+    Environment & MLP Actor & Joint-N & BIRD \\
+    \midrule
+    Stationary & 5959.2 $\pm$ 577.4 & 4567.8 $\pm$ 800.0 & \textbf{6247.4 $\pm$ 445.4} \\
+    Drifting & 2425.3 $\pm$ 651.8 & 4902.9 $\pm$ 830.8 & \textbf{7042.5 $\pm$ 693.9} \\
+    MIMIC-ICU Simulator & 782.6 $\pm$ 81.0 & 966.4 $\pm$ 80.0 & \textbf{1052.9 $\pm$ 48.7} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
