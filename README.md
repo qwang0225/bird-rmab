@@ -1,4 +1,4 @@
-﻿# BIRD — Research code for RMAB experiments
+﻿# BIRD: Belief-Encoder Index Restless Diffusion for Partially Observable RMABs
 
 This repository contains the code and saved evaluation arrays needed to
 reproduce the figures and tables from the BIRD paper. Checkpoints and raw
