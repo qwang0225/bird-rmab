@@ -29,10 +29,14 @@ Training and evaluation scripts live in the environment-specific folders.
 Common entry points include `diffusion_DPMD_train.py`, `neurwin.py`,
 `ppo.py`, and `run_comparison.py` (see each subfolder for options).
 
-Example (inspect options before running):
+Training examples
 
 ```bat
-python synthetic-stationary/diffusion_DPMD_train.py --help
+# Train DPMD from scratch (defaults: seed=0, N=20, K=5, T=100, epochs=200)
+python synthetic-stationary/diffusion_DPMD_train.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --ckpt_dir checkpoints_dpmd
+
+# Evaluate trained checkpoints (example: produce comparison plot)
+python synthetic-drifting/run_comparison.py --N 20 --K 5 --T 100 --n_episodes 100 --dpmd_ckpt checkpoints_dpmd/best.pth --out comparison_N20_K5.png --seed 42
 ```
 
 ## Project layout
