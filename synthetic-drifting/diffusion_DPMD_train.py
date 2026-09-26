@@ -46,6 +46,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(1, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(1, str(Path(__file__).parent.parent / "simulator"))
 from diffusion_model import (
     PerArmDiffusionActor,
@@ -54,6 +55,7 @@ from diffusion_model import (
     topk_action,
 )
 from env import AdaptRMABConfig, AdaptRMABEnv
+from training_time_utils import start_training_timer, write_training_time
 
 
 # ---------------------------------------------------------------------------
@@ -617,6 +619,7 @@ def _save_training_plots(save_dir, epochs, ep_returns, avg10_returns, loss_q, lo
 
 def train(env: AdaptRMABEnv, cfg: DPMDTrainConfig | None = None,
           checkpoint_dir: str | None = None) -> DPMDAgent:
+    train_start = start_training_timer()
     cfg = cfg or DPMDTrainConfig()
     cfg.N = env.cfg.N; cfg.K = env.cfg.K; cfg.T = env.cfg.T
     if checkpoint_dir is not None:
@@ -694,6 +697,11 @@ def train(env: AdaptRMABEnv, cfg: DPMDTrainConfig | None = None,
             mf.flush()
 
     _save_training_plots(cfg.save_dir, plot_epochs, plot_ep, plot_avg10, plot_lq, plot_la, plot_qm)
+    write_training_time(
+        cfg.save_dir, method="BIRD", env_name="synthetic-drifting",
+        cfg=cfg, start_time=train_start, best_return=best_return,
+        completed_epochs=cfg.epochs,
+    )
     return agent
 
 

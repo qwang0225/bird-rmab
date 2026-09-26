@@ -2,7 +2,7 @@
 train_neurwin.py  (mimic-icu v2)
 
 Train NeurWIN: BeliefEncoder (5D obs tokens) + BeliefIndexNet (scalar Whittle index).
-Algorithm: pairwise REINFORCE, matching the synthetic NeurWIN trainer.
+Algorithm: pairwise REINFORCE — same as synthetic-drifting neurwin.py.
 
   - Sample target arm i, reference arm j
   - p(activate i) = sigmoid(scale * (w_i - w_j))

@@ -1,5 +1,5 @@
 """
-Particle-filter posterior rank diagnostic for adapt-lr.
+Particle-filter posterior rank diagnostic for synthetic-drifting.
 
 For one fixed joint observed history in the drifting synthetic RMAB, this
 script runs an independent bootstrap particle filter for each arm, computes
@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parent.parent
 
 
 @dataclass
@@ -379,7 +379,7 @@ def main() -> None:
 
     query = result.query_arm
     print(
-        f"[adapt-lr] time={result.time_index} selected_arm={query} "
+        f"[synthetic-drifting] time={result.time_index} selected_arm={query} "
         f"topk_prob={result.topk_probs[query]:.3f} "
         f"rank_mean={result.ranks[:, query].mean():.2f} "
         f"rank_std={result.ranks[:, query].std():.2f} "
@@ -389,7 +389,7 @@ def main() -> None:
     for arm in result.query_arms[1:]:
         arm = int(arm)
         print(
-            f"[adapt-lr] selected_arm={arm} "
+            f"[synthetic-drifting] selected_arm={arm} "
             f"topk_prob={result.topk_probs[arm]:.3f} "
             f"rank_mean={result.ranks[:, arm].mean():.2f} "
             f"rank_std={result.ranks[:, arm].std():.2f} "

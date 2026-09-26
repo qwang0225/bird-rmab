@@ -41,6 +41,7 @@ Note: NeurWIN policy has moved to neurwin.py.
 from __future__ import annotations
 
 import numpy as np
+import time
 
 from env import MarkovRMABConfig, MarkovRMABEnv
 from whittle import whittle_single, OracleWhittlePolicy
@@ -411,6 +412,7 @@ def evaluate_policy(
     n_episodes: int = 50,
     seed_offset: int = 0,
     verbose:    bool = False,
+    return_timing: bool = False,
 ) -> np.ndarray:
     """
     Roll out `policy` for n_episodes and return per-episode total reward.
@@ -425,6 +427,8 @@ def evaluate_policy(
     """
     returns = np.empty(n_episodes)
     is_bayesian = hasattr(policy, "observe")
+    action_time = 0.0
+    action_count = 0
 
     for ep in range(n_episodes):
         env  = MarkovRMABEnv(env_cfg, seed=seed_offset + ep)
@@ -435,7 +439,10 @@ def evaluate_policy(
 
         ep_return = 0.0
         for _ in range(env_cfg.T):
+            t0 = time.perf_counter()
             a = policy.act(obs)
+            action_time += time.perf_counter() - t0
+            action_count += 1
             obs_next, reward_vec, done, info = env.step(a)
 
             ep_return += float(reward_vec.sum())
@@ -452,6 +459,8 @@ def evaluate_policy(
             print(f"  ep {ep+1:3d}/{n_episodes}  return={ep_return:.1f}", end="\r")
     if verbose:
         print()
+    if return_timing:
+        return returns, action_time / max(action_count, 1)
     return returns
 
 

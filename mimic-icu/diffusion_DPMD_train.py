@@ -3,8 +3,7 @@ diffusion_DPMD_train.py  (mimic-icu)
 
 Diffusion Policy Mirror Descent on MIMIC-ICU POMDP RMAB.
 
-Key difference from the synthetic environments: observations are 5D
-(HR, SBP, MBP, SpO2, RespRate)
+Key difference from synthetic-drifting: observations are 5D (HR, SBP, MBP, SpO2, RespRate)
 instead of scalar. The BeliefEncoder treats each step's (obs_5D, action) as a
 6-dimensional token — same Transformer architecture, richer per-step input.
 
@@ -18,7 +17,7 @@ Auxiliary next-obs prediction loss:
   Forces encoder to capture (alpha_i, beta_i) in z_i because each vital's
   next value depends on the latent health transition.
 
-Architecture follows the synthetic BIRD trainer:
+Architecture follows synthetic-drifting:
   - Encoder is shared between actor and critic optimizers.
   - Global reward normalization (scalar mu_r / sig_r EMA).
   - No separate target encoder; z_next uses the live encoder.
@@ -43,6 +42,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(1, str(Path(__file__).resolve().parents[1]))
 from diffusion_model import (
     PerArmDiffusionActor,
     PerArmTwinCritic,
@@ -50,6 +50,7 @@ from diffusion_model import (
     topk_action,
 )
 from env import MIMICRMABConfig, MIMICRMABEnv, OBS_DIM
+from training_time_utils import start_training_timer, write_training_time
 
 
 # ---------------------------------------------------------------------------
@@ -95,7 +96,7 @@ class BeliefEncoder(nn.Module):
     Per-arm Transformer over L-step (obs_5D, action) history.
 
     Each timestep token = cat([obs_dim vitals, action]) = obs_dim+1 dims.
-    Richer than the synthetic scalar observations: 5x more signal per step for type inference,
+    Richer than synthetic-drifting's scalar obs: 5x more signal per step for type inference,
     making patient type disambiguation faster from shorter history windows.
 
     Input:  obs_hist (batch, N, L, obs_dim),  act_hist (batch, N, L)
@@ -598,6 +599,7 @@ def _save_training_plots(save_dir, epochs, ep_returns, avg10_returns,
 
 def train(env: MIMICRMABEnv, cfg: DPMDTrainConfig | None = None,
           checkpoint_dir: str | None = None) -> DPMDAgent:
+    train_start = start_training_timer()
     cfg = cfg or DPMDTrainConfig()
     cfg.N       = env.cfg.N
     cfg.K       = env.cfg.K
@@ -681,6 +683,11 @@ def train(env: MIMICRMABEnv, cfg: DPMDTrainConfig | None = None,
 
     _save_training_plots(cfg.save_dir, plot_epochs, plot_ep, plot_avg10,
                          plot_lq, plot_la, plot_qm)
+    write_training_time(
+        cfg.save_dir, method="BIRD", env_name="mimic-icu",
+        cfg=cfg, start_time=train_start, best_return=best_return,
+        completed_epochs=cfg.epochs,
+    )
     return agent
 
 

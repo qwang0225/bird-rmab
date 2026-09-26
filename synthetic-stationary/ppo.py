@@ -1,10 +1,10 @@
 """
-ppo.py  (synthetic-stationary)
+ppo.py  (synthetic-drifting)
 
 PPO baseline for AdaptRMAB with hidden types + drifting dynamics.
 
 Architecture:
-  PerArmEncoder : per-arm MLP over L-step (obs, action) history -> z_i
+  PerArmEncoder : shared MLP over L-step history -> z_i
   ActorHead     : z_i per arm -> score_i,  top-K selection (hard eval)
   CriticHead    : mean(z_i) -> V(obs)
 
@@ -61,9 +61,9 @@ class PPOConfig:
     seed: int = 42
 
     # History encoder
-    L: int   = 20          # history length per arm
-    arm_enc_hidden: int = 64  # MLP hidden units for per-arm encoder
-    z_dim: int = 32           # arm embedding dim
+    L: int   = 40
+    z_dim: int = 64
+    arm_enc_hidden: int = 64
 
     # Training
     epochs: int = 400
@@ -370,6 +370,8 @@ def ppo_update(agent: PPOAgent, buffer: RolloutBuffer,
             log_p  = F.log_softmax(scores, dim=-1)        # (B, N)
             new_lp = _subset_log_prob(log_p, a_b)         # (B,)
 
+            # Subset log-probabilities are approximate. Bound the log ratio
+            # before exponentiation so an extreme update cannot overflow.
             ratio     = torch.exp(new_lp - old_lp_b)
             clip_ratio = torch.clamp(ratio, 1 - cfg.clip_eps, 1 + cfg.clip_eps)
             loss_actor = -torch.min(ratio * adv_b, clip_ratio * adv_b).mean()
@@ -383,7 +385,6 @@ def ppo_update(agent: PPOAgent, buffer: RolloutBuffer,
             loss_critic = F.mse_loss(v_pred, ret_b)
 
             loss = loss_actor + cfg.value_coef * loss_critic
-
             agent.opt.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(
@@ -554,8 +555,8 @@ def main():
     parser.add_argument("--episodes_per_epoch", type=int, default=4)
     parser.add_argument("--ppo_epochs",   type=int,   default=4)
     parser.add_argument("--batch_size",   type=int,   default=512)
-    parser.add_argument("--L",            type=int,   default=20)
-    parser.add_argument("--z_dim",        type=int,   default=32)
+    parser.add_argument("--L",            type=int,   default=40)
+    parser.add_argument("--z_dim",        type=int,   default=64)
     parser.add_argument("--lr",           type=float, default=3e-4)
     parser.add_argument("--gamma",        type=float, default=0.99)
     parser.add_argument("--clip_eps",     type=float, default=0.2)

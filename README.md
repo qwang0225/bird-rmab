@@ -1,56 +1,89 @@
-﻿# BIRD: Belief-Encoder Index Restless Diffusion for Partially Observable RMABs
+# BIRD: Belief-Encoder Index Restless Diffusion
 
-This repository contains the code and saved evaluation arrays needed to
-reproduce the figures and tables from the BIRD paper. Checkpoints and raw
-clinical data are intentionally omitted; saved `.npz` arrays enable figure
-regeneration without retraining.
-
-## Requirements
-
-Create and activate the conda environment:
+## Setup
 
 ```bat
-conda env create -f environment.yml
-conda activate bird-rmab
+conda activate bayesian_rmab
 ```
 
-## Quick start
+Dependencies are listed in `environment.yml`. Set `CONDA_ROOT` in the batch
+files if Anaconda is installed in a different location.
 
-To validate inputs and regenerate paper figures (from provided arrays):
+## Run the experiments
+
+From the `BIRD` directory:
 
 ```bat
-python plot/verify_paper_inputs.py
 run_all.bat
 ```
 
-## Running experiments
+The runner performs these steps:
 
-Training and evaluation scripts live in the environment-specific folders.
-Common entry points include `diffusion_DPMD_train.py`, `neurwin.py`,
-`ppo.py`, and `run_comparison.py` (see each subfolder for options).
+1. Train missing baseline checkpoints and reuse existing valid checkpoints.
+2. Validate saved weights before evaluation.
+3. Run the main comparisons and Markov2 sanity check.
+4. Retrain and evaluate ablation variants.
+5. Evaluate comparisons at N=40 and N=100, then measure transfer inference timing.
 
-Training examples
+Baseline training or checkpoint-validation failures stop the suite before
+evaluation. Invalid existing checkpoints are reported without being overwritten.
+Experiment-stage failures appear in the final summary and return a nonzero exit code.
+
+Baseline training uses each script's default epochs, seed, and model settings.
+The main environments use N=20, K=5; Markov2 uses N=50, K=10.
+
+## Training and checkpoint commands
 
 ```bat
-# Train DPMD from scratch (defaults: seed=0, N=20, K=5, T=100, epochs=200)
-python synthetic-stationary/diffusion_DPMD_train.py --N 20 --K 5 --T 100 --seed 0 --epochs 200 --ckpt_dir checkpoints_dpmd
+rem Preview missing-policy training commands without training
+python train_missing.py --dry-run
 
-# Evaluate trained checkpoints (example: produce comparison plot)
-python synthetic-drifting/run_comparison.py --N 20 --K 5 --T 100 --n_episodes 100 --dpmd_ckpt checkpoints_dpmd/best.pth --out comparison_N20_K5.png --seed 42
+rem Train missing baseline checkpoints without running experiments
+python train_missing.py
+
+rem Validate checkpoints without training
+python check_checkpoints.py
 ```
 
-## Project layout
+The baseline stage covers BIRD, NeurWIN, PPO, MLP actor, Gaussian actor, and
+learned rollout in the three main environments; BIRD, NeurWIN, and PPO in
+Markov2. Checkpoint validation
+checks saved weights, not training convergence.
 
-- `synthetic-stationary/` — stationary synthetic experiments and saved arrays
-- `synthetic-drifting/`  — drifting synthetic experiments and saved arrays
-- `mimic-icu/`           — MIMIC-derived simulator scripts and saved arrays
-- `markov2/`             — two-state RMAB sanity-check experiments
-- `plot/`                — plotting and table-generation utilities
-- `outputs/`             — generated figures and tables
+## Run individual experiments
 
-## Notes
+| Script | Experiment | Training behavior |
+| --- | --- | --- |
+| `run_main_experiments.bat` | Main comparisons and Markov2 | Train missing baselines |
+| `run_all_policies_N40_N100.bat` | N=40, K=10 and N=100, K=25 comparisons | Reuse N=20, K=5 baselines; train if missing |
+| `run_actor_ablation.bat` | Actor architecture: MLP, joint diffusion, Gaussian, BIRD | Retrain variants |
+| `run_aux_ablation_experiments.bat` | Auxiliary prediction loss | Retrain variants |
+| `run_critic_ablation_experiments.bat` | Critic architecture | Retrain variants |
+| `run_window_l_ablation.bat` | History length | Retrain variants |
+| `run_transformer_lstm_mlp_ablation.bat` | Belief encoder | Retrain variants |
+| `run_factor_stress_ablation.bat` | Observation and dynamics uncertainty | Retrain variants |
+| `run_transfer_timing.bat` | Inference timing | Train missing BIRD checkpoints |
 
-- Saved `.npz` files are provided to enable reproducibility without training.
-- Raw MIMIC data must be obtained separately via PhysioNet and is not included.
-- For questions or issues, please open an issue on the repository.
+All ablation launchers are included in `run_all.bat` and retrain their variants
+by default. Checkpoints and results are saved in the corresponding environment's
+variant and ablation directories. Boundary diagnostic scripts are in `plot/`
+and require trained checkpoints.
 
+## Figures and tables
+
+After generating the required evaluation results:
+
+```bat
+python plot/prepare_results.py
+python plot/plot_actor_comparison.py
+```
+
+Use `--input-dir` and `--output-dir` to choose different result and output
+locations. `prepare_results.py` specifies the required evaluation files,
+including separate MIMIC scale and history-window evaluations.
+
+## MIMIC data
+
+Simulator parameters are defined in `mimic-icu/env.py`. To fit parameters from
+MIMIC data, provide the CSV path to `mimic-icu/fit_mimic_params_v2.py`.
+Clinical data require separate access and are not included.

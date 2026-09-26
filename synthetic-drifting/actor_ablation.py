@@ -1,7 +1,7 @@
 """
 Actor ablation for BIRD/DPMD on synthetic-drifting.
 
-Compares only the deterministic MLP actor ablation against full BIRD.
+Compares deterministic MLP, joint diffusion, Gaussian, and per-arm BIRD actors.
 
 Outputs:
   actor_ablation_N{N}_K{K}.npz
@@ -24,10 +24,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 from env import AdaptRMABConfig, AdaptRMABEnv
 
 
+from run_comparison import _load_gaussian_actor as load_gaussian
+
 SEED_OFFSET = 1000
 METHODS = ["mlp_actor", "joint_N", "dpmd"]
-LABELS = {"mlp_actor": "MLP Actor", "joint_N": "BIRD Joint-N", "dpmd": "BIRD"}
-COLORS = {"mlp_actor": "#e377c2", "joint_N": "#ff7f0e", "dpmd": "#2ca02c"}
+LABELS = {"mlp_actor": "MLP Actor", "joint_N": "BIRD Joint-N", "dpmd": "BIRD", "gaussian_actor": "Gaussian actor"}
+COLORS = {"mlp_actor": "#e377c2", "joint_N": "#ff7f0e", "dpmd": "#2ca02c", "gaussian_actor": "#9467bd"}
 
 
 def _load_dpmd(ckpt_path: str, env_cfg: AdaptRMABConfig):
@@ -141,6 +143,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mlp_actor_ckpt", default="checkpoints_mlp_actor/best.pth")
     parser.add_argument("--joint_n_ckpt", default="checkpoints_dpmd_joint_N/best.pth")
+    parser.add_argument("--gaussian_actor_ckpt", default="checkpoints_gaussian_actor/best.pth")
     parser.add_argument("--dpmd_ckpt", default="checkpoints_dpmd/best.pth")
     parser.add_argument("--N", type=int, default=20)
     parser.add_argument("--K", type=int, default=5)
@@ -153,6 +156,7 @@ def main() -> None:
     env_cfg = AdaptRMABConfig(N=args.N, K=args.K, T=args.T)
     variants = [
         ("mlp_actor", args.mlp_actor_ckpt, _load_mlp_actor),
+        ("gaussian_actor", args.gaussian_actor_ckpt, load_gaussian),
         ("joint_N", args.joint_n_ckpt, _load_joint_n),
         ("dpmd", args.dpmd_ckpt, _load_dpmd),
     ]
@@ -160,8 +164,7 @@ def main() -> None:
     results: dict[str, np.ndarray] = {}
     for name, ckpt_path, loader in variants:
         if not Path(ckpt_path).exists():
-            print(f"  {name:12s} [checkpoint not found: {ckpt_path}]")
-            continue
+            raise FileNotFoundError(f"{name}: missing checkpoint {ckpt_path}")
         agent = loader(ckpt_path, env_cfg)
         for attr in ("encoder", "actor", "critic"):
             if hasattr(agent, attr):
@@ -176,6 +179,7 @@ def main() -> None:
 
     stem = args.out or f"actor_ablation_N{args.N}_K{args.K}.png"
     out_png = Path(stem)
+    out_png.parent.mkdir(parents=True, exist_ok=True)
     out_npz = out_png.with_suffix(".npz")
     _save_npz(out_npz, results, "synthetic-drifting", args)
     _plot(results, str(out_png))

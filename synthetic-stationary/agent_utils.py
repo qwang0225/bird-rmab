@@ -1,8 +1,8 @@
 """
 agent_utils.py  (synthetic-stationary)
 
-Shared agent loaders and evaluation helper used by the stationary
-comparison and actor-ablation scripts.
+Shared agent loaders and evaluation helper used by
+run_comparison.py and ablation_study.py.
 """
 from __future__ import annotations
 
@@ -31,6 +31,8 @@ def load_neurwin(ckpt_path: str, env_cfg: AdaptRMABConfig) -> object:
     return agent
 
 
+
+
 def load_dpmd(ckpt_path: str, env_cfg: AdaptRMABConfig) -> object:
     from diffusion_DPMD_train import DPMDAgent, DPMDTrainConfig
     ckpt  = torch.load(ckpt_path, map_location="cpu")
@@ -53,7 +55,8 @@ def load_ppo(ckpt_path: str, env_cfg: AdaptRMABConfig) -> object:
     saved = ckpt.get("cfg", {})
     cfg   = PPOConfig()
     cfg.N = env_cfg.N; cfg.K = env_cfg.K; cfg.T = env_cfg.T
-    for key in ("L", "arm_enc_hidden", "z_dim"):
+    cfg.encoder_type = saved.get("encoder_type", "mlp")
+    for key in ("L", "arm_enc_hidden", "z_dim", "encoder_hidden", "encoder_heads", "encoder_layers"):
         if key in saved:
             setattr(cfg, key, saved[key])
     agent = PPOAgent(N=cfg.N, K=cfg.K, cfg=cfg)
@@ -74,6 +77,23 @@ def load_mlp_actor(ckpt_path: str, env_cfg: AdaptRMABConfig) -> object:
     agent = MLPActorAgent(N=cfg.N, K=cfg.K, cfg=cfg)
     agent.load_checkpoint(ckpt_path)
     return agent
+
+
+def load_gaussian_actor(ckpt_path: str, env_cfg: AdaptRMABConfig) -> object:
+    from gaussian_actor import GaussianActorAgent, GaussianActorConfig
+    ckpt = torch.load(ckpt_path, map_location="cpu")
+    saved = ckpt.get("cfg", {})
+    cfg = GaussianActorConfig()
+    cfg.N = env_cfg.N; cfg.K = env_cfg.K; cfg.T = env_cfg.T
+    for key in ("z_dim", "encoder_hidden", "encoder_heads", "encoder_layers",
+                "L", "actor_hidden", "critic_hidden", "sigma_min", "sigma_max"):
+        if key in saved:
+            setattr(cfg, key, saved[key])
+    agent = GaussianActorAgent(N=cfg.N, K=cfg.K, cfg=cfg)
+    agent.load_checkpoint(ckpt_path)
+    return agent
+
+
 
 
 # ---------------------------------------------------------------------------

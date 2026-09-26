@@ -1,5 +1,5 @@
 """
-Boundary-state oracle value diagnostic for adapt-lr.
+Boundary-state oracle value diagnostic for synthetic-drifting.
 
 This diagnostic asks whether BIRD's stochastic score samples produce
 higher-value Top-K activation sets than a deterministic MLP actor on histories
@@ -25,7 +25,7 @@ import numpy as np
 import torch
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parent.parent
 ADAPT_DIR = ROOT / "synthetic-drifting"
 
 
@@ -306,7 +306,7 @@ def main() -> None:
     diffs = results["bird_mean_diff"]
     sample_diffs = results["bird_sample_diff"].reshape(-1)
     print(
-        f"[adapt-lr boundary value] histories={len(diffs)} bird_samples={args.bird_samples} "
+        f"[synthetic-drifting boundary value] histories={len(diffs)} bird_samples={args.bird_samples} "
         f"mean_diff={diffs.mean():.3f} median_diff={np.median(diffs):.3f} "
         f"Pr(mean_diff>0)={(diffs > 0).mean():.3f} "
         f"Pr(sample_diff>0)={(sample_diffs > 0).mean():.3f} "

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 import matplotlib
@@ -31,7 +32,10 @@ import torch
 sys.path.insert(0, str(Path(__file__).parent))
 
 from env import AdaptRMABConfig, AdaptRMABEnv, TYPE_ALPHA_MEAN, TYPE_BETA_MEAN, TYPE_NAMES
-from baselines import RandomPolicy, GreedyObsPolicy, OracleGreedyPolicy, OracleLookaheadPolicy, evaluate_policy
+from baselines import (
+    RandomPolicy, GreedyObsPolicy, ActivationGreedyPolicy,
+    OracleGreedyPolicy, OracleLookaheadPolicy, evaluate_policy,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -69,16 +73,68 @@ def _load_dpmd(ckpt_path: str, env_cfg: AdaptRMABConfig) -> object:
     return agent
 
 
+def _load_dpmd_with_critic(ckpt_path: str, env_cfg: AdaptRMABConfig, critic_cls) -> object:
+    import diffusion_DPMD_train as dpmd
+
+    original = dpmd.PerArmTwinCritic
+    try:
+        dpmd.PerArmTwinCritic = critic_cls
+        return _load_dpmd(ckpt_path, env_cfg)
+    finally:
+        dpmd.PerArmTwinCritic = original
+
+
+def _extra_dpmd_loader(label: str):
+    if label in {"per_arm_single", "single", "critic_single"}:
+        from critic_ablation import PerArmSingleCritic
+        return lambda p, env_cfg: _load_dpmd_with_critic(p, env_cfg, PerArmSingleCritic)
+    if label in {"joint_twin", "joint", "critic_joint"}:
+        from critic_ablation import JointTwinCritic
+        return lambda p, env_cfg: _load_dpmd_with_critic(p, env_cfg, JointTwinCritic)
+    return _load_dpmd
+
+
 def _load_ppo(ckpt_path: str, env_cfg: AdaptRMABConfig) -> object:
     from ppo import PPOAgent, PPOConfig
     ckpt  = torch.load(ckpt_path, map_location="cpu")
     saved = ckpt.get("cfg", {})
     cfg   = PPOConfig()
     cfg.N = env_cfg.N; cfg.K = env_cfg.K; cfg.T = env_cfg.T
-    for key in ("L", "arm_enc_hidden", "z_dim"):
+    cfg.encoder_type = saved.get("encoder_type", "mlp")
+    for key in ("L", "arm_enc_hidden", "z_dim", "encoder_hidden", "encoder_heads", "encoder_layers"):
         if key in saved:
             setattr(cfg, key, saved[key])
     agent = PPOAgent(N=cfg.N, K=cfg.K, cfg=cfg)
+    agent.load_checkpoint(ckpt_path)
+    return agent
+
+
+def _load_mlp_actor(ckpt_path: str, env_cfg: AdaptRMABConfig) -> object:
+    from mlp_actor import MLPActorAgent, MLPActorConfig
+    ckpt = torch.load(ckpt_path, map_location="cpu")
+    saved = ckpt.get("cfg", {})
+    cfg = MLPActorConfig()
+    cfg.N = env_cfg.N; cfg.K = env_cfg.K; cfg.T = env_cfg.T
+    for key in ("z_dim", "encoder_hidden", "encoder_heads", "encoder_layers",
+                "L", "actor_hidden", "critic_hidden"):
+        if key in saved:
+            setattr(cfg, key, saved[key])
+    agent = MLPActorAgent(N=cfg.N, K=cfg.K, cfg=cfg)
+    agent.load_checkpoint(ckpt_path)
+    return agent
+
+
+def _load_gaussian_actor(ckpt_path: str, env_cfg: AdaptRMABConfig) -> object:
+    from gaussian_actor import GaussianActorAgent, GaussianActorConfig
+    ckpt = torch.load(ckpt_path, map_location="cpu")
+    saved = ckpt.get("cfg", {})
+    cfg = GaussianActorConfig()
+    cfg.N = env_cfg.N; cfg.K = env_cfg.K; cfg.T = env_cfg.T
+    for key in ("z_dim", "encoder_hidden", "encoder_heads", "encoder_layers",
+                "L", "actor_hidden", "critic_hidden", "sigma_min", "sigma_max"):
+        if key in saved:
+            setattr(cfg, key, saved[key])
+    agent = GaussianActorAgent(N=cfg.N, K=cfg.K, cfg=cfg)
     agent.load_checkpoint(ckpt_path)
     return agent
 
@@ -110,7 +166,11 @@ def _eval_agent(agent, env_cfg: AdaptRMABConfig,
 
 COLORS = {
     "random":            "#d62728",
-    "greedy":            "#ff9896",
+    "obs_greedy":        "#ff9896",
+    "activation_greedy": "#bcbd22",
+    "learned_rollout":   "#7f7f7f",
+    "mlp_actor":         "#e377c2",
+    "gaussian_actor":    "#9467bd",
     "oracle_greedy":     "#aec7e8",
     "oracle_lookahead":  "#1f77b4",
     "neurwin":           "#ff7f0e",
@@ -119,7 +179,11 @@ COLORS = {
 }
 LABELS = {
     "random":           "Random",
-    "greedy":           "Greedy",
+    "obs_greedy":       "Obs-Greedy",
+    "activation_greedy": "Activation-Greedy",
+    "learned_rollout":  "Learned Rollout",
+    "mlp_actor":        "MLP Actor",
+    "gaussian_actor":   "Gaussian Actor",
     "neurwin":          "NeurWIN",
     "ppo":              "PPO",
     "dpmd":             "BIRD (ours)",
@@ -159,13 +223,17 @@ def plot_comparison(results: dict[str, np.ndarray],
 
 
 def save_results_npz(path: Path, results: dict[str, np.ndarray],
-                     env_name: str, args: argparse.Namespace) -> None:
+                     env_name: str, args: argparse.Namespace,
+                     latency_ms: dict[str, float] | None = None) -> None:
     names = list(results.keys())
+    latency_ms = latency_ms or {}
     np.savez(
         path,
         method_names=np.asarray(names),
         mean_returns=np.asarray([results[n].mean() for n in names], dtype=np.float32),
         std_returns=np.asarray([results[n].std() for n in names], dtype=np.float32),
+        latency_ms_per_decision=np.asarray(
+            [latency_ms.get(n, np.nan) for n in names], dtype=np.float32),
         env_name=np.asarray(env_name),
         N=np.asarray(args.N, dtype=np.int32),
         K=np.asarray(args.K, dtype=np.int32),
@@ -184,10 +252,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dpmd_ckpt", type=str,
                         default="checkpoints_dpmd/best.pth")
+    parser.add_argument("--extra_dpmd_ckpts", nargs="*", default=[],
+                        help="Additional BIRD checkpoints as label=path entries.")
     parser.add_argument("--nw_ckpt",   type=str,
                         default="checkpoints_neurwin/best.pth")
     parser.add_argument("--ppo_ckpt",   type=str,
                         default="checkpoints_ppo/best.pth")
+    parser.add_argument("--mlp_actor_ckpt", type=str,
+                        default="checkpoints_mlp_actor/best.pth")
+    parser.add_argument("--gaussian_actor_ckpt", type=str,
+                        default="checkpoints_gaussian_actor/best.pth")
+    parser.add_argument("--learned_rollout_ckpt", type=str,
+                        default="checkpoints_learned_rollout/best.pth")
+    parser.add_argument("--learned_rollout_H", type=int, default=None,
+                        help="Override learned-rollout planning horizon at evaluation time.")
     parser.add_argument("--n_episodes", type=int, default=100)
     parser.add_argument("--seed",       type=int, default=42)
     parser.add_argument("--N",          type=int, default=20)
@@ -211,23 +289,36 @@ def main():
     print()
 
     results: dict[str, np.ndarray] = {}
+    latency_ms: dict[str, float] = {}
 
     # ── Baselines ────────────────────────────────────────────────────────
     for name, pname, policy in [
         ("random",  "random",  RandomPolicy(env_cfg, seed=args.seed)),
-        ("greedy",  "greedy",  GreedyObsPolicy(env_cfg)),
+        ("obs_greedy", "greedy", GreedyObsPolicy(env_cfg)),
+        ("activation_greedy", "greedy", ActivationGreedyPolicy(env_cfg)),
     ]:
-        rets = evaluate_policy(pname, policy, env_cfg,
-                               args.n_episodes, seed_offset=args.seed)
+        rets, sec_per_decision = evaluate_policy(
+            pname, policy, env_cfg, args.n_episodes,
+            seed_offset=args.seed, return_timing=True)
         results[name] = rets
-        print(f"  {name:18s}  mean={rets.mean():8.1f}  std={rets.std():.1f}")
+        latency_ms[name] = 1000.0 * sec_per_decision
+        print(f"  {name:18s}  mean={rets.mean():8.1f}  std={rets.std():.1f}"
+              f"  latency={latency_ms[name]:.3f} ms/decision")
 
     # ── Learned agents ───────────────────────────────────────────────────
     trained = [
         ("neurwin",          args.nw_ckpt,   _load_neurwin),
         ("ppo",          args.ppo_ckpt,   _load_ppo),
+        ("mlp_actor",    args.mlp_actor_ckpt, _load_mlp_actor),
+        ("gaussian_actor", args.gaussian_actor_ckpt, _load_gaussian_actor),
+        ("learned_rollout", args.learned_rollout_ckpt, None),
         ("dpmd",         args.dpmd_ckpt,  _load_dpmd),
     ]
+    for item in args.extra_dpmd_ckpts:
+        if "=" not in item:
+            raise ValueError(f"--extra_dpmd_ckpts entries must be label=path, got: {item}")
+        label, ckpt_path = item.split("=", 1)
+        trained.append((label, ckpt_path, _extra_dpmd_loader(label)))
 
     for name, ckpt_path, loader in trained:
         p = Path(ckpt_path)
@@ -235,7 +326,13 @@ def main():
             print(f"  {name:18s}  [checkpoint not found: {ckpt_path}]")
             continue
         try:
-            agent = loader(ckpt_path, env_cfg)
+            if name == "learned_rollout":
+                from learned_rollout import load_learned_rollout
+                agent = load_learned_rollout(ckpt_path, env_cfg)
+                if args.learned_rollout_H is not None:
+                    agent.cfg.H = int(args.learned_rollout_H)
+            else:
+                agent = loader(ckpt_path, env_cfg)
             if hasattr(agent, "encoder"):
                 agent.encoder.eval()
             if hasattr(agent, "index_net"):
@@ -244,19 +341,35 @@ def main():
                 agent.actor.eval()
             if hasattr(agent, "critic"):
                 agent.critic.eval()
+            t_action = 0.0
+            n_action = 0
+            original_act = agent.act_hard
+            def timed_act(obs, **kwargs):
+                nonlocal t_action, n_action
+                t0 = time.perf_counter()
+                action = original_act(obs, **kwargs)
+                t_action += time.perf_counter() - t0
+                n_action += 1
+                return action
+            agent.act_hard = timed_act
             rets = _eval_agent(agent, env_cfg,
                                n_episodes=args.n_episodes,
                                seed=args.seed + 1000)
             results[name] = rets
-            print(f"  {name:18s}  mean={rets.mean():8.1f}  std={rets.std():.1f}")
+            latency_ms[name] = 1000.0 * t_action / max(n_action, 1)
+            print(f"  {name:18s}  mean={rets.mean():8.1f}  std={rets.std():.1f}"
+                  f"  latency={latency_ms[name]:.3f} ms/decision")
         except Exception as e:
             print(f"  {name:18s}  [ERROR: {e}]")
 
     # ── Oracle last (rightmost bar) ───────────────────────────────────────
-    rets = evaluate_policy("oracle_lookahead", OracleLookaheadPolicy(env_cfg),
-                           env_cfg, args.n_episodes, seed_offset=args.seed)
+    rets, sec_per_decision = evaluate_policy(
+        "oracle_lookahead", OracleLookaheadPolicy(env_cfg),
+        env_cfg, args.n_episodes, seed_offset=args.seed, return_timing=True)
     results["oracle_lookahead"] = rets
-    print(f"  {'oracle_lookahead':18s}  mean={rets.mean():8.1f}  std={rets.std():.1f}")
+    latency_ms["oracle_lookahead"] = 1000.0 * sec_per_decision
+    print(f"  {'oracle_lookahead':18s}  mean={rets.mean():8.1f}  std={rets.std():.1f}"
+          f"  latency={latency_ms['oracle_lookahead']:.3f} ms/decision")
 
     # ── Summary ──────────────────────────────────────────────────────────
     print()
@@ -266,10 +379,12 @@ def main():
     for name, rets in results.items():
         m   = rets.mean()
         pct = 100.0 * (m - rand_m) / (orac_m - rand_m + 1e-8)
-        print(f"  {name:18s}  {m:8.1f}  ({pct:+.1f}%)")
+        print(f"  {name:18s}  {m:8.1f}  ({pct:+.1f}%)"
+              f"  {latency_ms.get(name, np.nan):8.3f} ms/decision")
 
     print()
-    save_results_npz(Path(args.out).with_suffix(".npz"), results, "synthetic-drifting", args)
+    save_results_npz(Path(args.out).with_suffix(".npz"), results,
+                     "synthetic-drifting", args, latency_ms)
     plot_comparison(results, env_cfg, save_path=args.out)
 
 

@@ -1,5 +1,5 @@
 """
-Combined boundary diagnostic figure for adapt-lr.
+Combined boundary diagnostic figure for synthetic-drifting.
 
 Left: posterior rank uncertainty for one boundary arm from the particle-filter
 diagnostic. Right: oracle value difference between BIRD sampled Top-K actions
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parent.parent
 RANK_NPZ = ROOT / "adapt_lr_particle_rank_posterior.npz"
 VALUE_NPZ = ROOT / "adapt_lr_boundary_value_diagnostic.npz"
 OUT_PNG = ROOT / "adapt_lr_boundary_combined_diagnostic.png"

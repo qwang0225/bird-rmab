@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parent.parent
 ENVIRONMENTS = [
     ("synthetic-stationary", "Stationary"),
     ("synthetic-drifting", "Drifting"),
