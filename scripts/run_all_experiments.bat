@@ -4,8 +4,7 @@ setlocal EnableDelayedExpansion
 set "ROOT=%~dp0..\"
 cd /d "%ROOT%"
 
-set "CONDA_ROOT=C:\Users\frank\anaconda3"
-call "%CONDA_ROOT%\Scripts\activate.bat" bayesian_rmab
+call "%~dp0activate_environment.bat"
 if errorlevel 1 exit /b 1
 
 python "%ROOT%train_missing.py" --scope all

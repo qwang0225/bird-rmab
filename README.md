@@ -12,8 +12,9 @@ and evaluates the method on synthetic and MIMIC-derived simulators.
 conda activate bayesian_rmab
 ```
 
-Dependencies are listed in `environment.yml`. Set `CONDA_ROOT` in the batch
-files if Anaconda is installed in a different location.
+Dependencies are listed in `environment.yml`. Run the batch files from an
+Anaconda Prompt or a terminal with conda initialized. They activate
+`bayesian_rmab` automatically; no installation path needs to be edited.
 
 ## Run the experiments
 

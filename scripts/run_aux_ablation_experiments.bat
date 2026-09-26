@@ -2,11 +2,10 @@
 setlocal
 
 set ENV_NAME=bayesian_rmab
-set CONDA_ROOT=C:\Users\frank\anaconda3
 set "ROOT=%~dp0..\"
 
 echo Activating conda environment: %ENV_NAME%
-call "%CONDA_ROOT%\Scripts\activate.bat" %ENV_NAME%
+call "%~dp0activate_environment.bat"
 if errorlevel 1 (
     echo [ERROR] Could not activate conda environment "%ENV_NAME%".
     exit /b 1

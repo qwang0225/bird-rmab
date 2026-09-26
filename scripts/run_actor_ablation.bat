@@ -1,8 +1,7 @@
 @echo off
 setlocal
 set "ROOT=%~dp0..\"
-set "CONDA_ROOT=C:\Users\frank\anaconda3"
-call "%CONDA_ROOT%\Scripts\activate.bat" bayesian_rmab
+call "%~dp0activate_environment.bat"
 if errorlevel 1 exit /b 1
 for %%E in (synthetic-stationary synthetic-drifting mimic-icu) do (
     call :run_environment %%E

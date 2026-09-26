@@ -2,6 +2,9 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 set "ROOT=%~dp0..\"
+call "%~dp0activate_environment.bat"
+if errorlevel 1 exit /b 1
+
 python "%ROOT%train_missing.py" --scope timing
 if errorlevel 1 exit /b 1
 

@@ -10,14 +10,11 @@ set "T=100"
 set "EVAL_EPISODES=100"
 set "SEED=42"
 set "ROLLOUT_H=10"
-set "CONDA_ROOT=C:\Users\frank\anaconda3"
 set "ENV_NAME=bayesian_rmab"
 set "HAD_FAILURE=0"
 
-if exist "%CONDA_ROOT%\Scripts\activate.bat" (
-    call "%CONDA_ROOT%\Scripts\activate.bat" "%ENV_NAME%"
-    if errorlevel 1 goto :activation_failed
-)
+call "%~dp0activate_environment.bat"
+if errorlevel 1 exit /b 1
 python -c "import torch, numpy, matplotlib; print('PyTorch:', torch.__version__, 'CUDA:', torch.cuda.is_available())"
 if errorlevel 1 goto :dependencies_failed
 
@@ -61,7 +58,7 @@ popd
 exit /b 1
 
 :activation_failed
-echo [ERROR] Could not activate %ENV_NAME%. Check CONDA_ROOT and ENV_NAME in this file.
+echo [ERROR] Could not activate %ENV_NAME%. Check that the conda environment is installed.
 set "HAD_FAILURE=1"
 goto :finish
 
