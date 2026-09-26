@@ -1,6 +1,6 @@
 @echo off
 setlocal
-set "ROOT=%~dp0"
+set "ROOT=%~dp0..\"
 set "CONDA_ROOT=C:\Users\frank\anaconda3"
 call "%CONDA_ROOT%\Scripts\activate.bat" bayesian_rmab
 if errorlevel 1 exit /b 1

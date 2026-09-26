@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableExtensions
-set "ROOT=%~dp0"
+set "ROOT=%~dp0..\"
 
 rem Evaluate existing default checkpoints: no retraining.
 rem Preserve the N=20,K=5 activation ratio: 25 percent of arms.

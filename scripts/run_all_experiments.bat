@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set ROOT=%~dp0
+set "ROOT=%~dp0..\"
 cd /d "%ROOT%"
 
 set "CONDA_ROOT=C:\Users\frank\anaconda3"
@@ -31,7 +31,7 @@ echo.
 echo ============================================================
 echo  1 of 9 ^| Main comparisons + Markov2
 echo ============================================================
-call run_main_experiments.bat
+call "%~dp0run_main_experiments.bat"
 if errorlevel 1 (
     set STATUS_1=FAILED
     set /a FAIL_COUNT+=1
@@ -43,7 +43,7 @@ echo.
 echo ============================================================
 echo  2 of 9 ^| Auxiliary loss ablation
 echo ============================================================
-call run_aux_ablation_experiments.bat
+call "%~dp0run_aux_ablation_experiments.bat"
 if errorlevel 1 (
     set STATUS_2=FAILED
     set /a FAIL_COUNT+=1
@@ -55,7 +55,7 @@ echo.
 echo ============================================================
 echo  3 of 9 ^| Critic ablation
 echo ============================================================
-call run_critic_ablation_experiments.bat
+call "%~dp0run_critic_ablation_experiments.bat"
 if errorlevel 1 (
     set STATUS_3=FAILED
     set /a FAIL_COUNT+=1
@@ -72,7 +72,7 @@ echo.
 echo ============================================================
 echo  4 of 9 ^| Window L ablation
 echo ============================================================
-call run_window_l_ablation.bat
+call "%~dp0run_window_l_ablation.bat"
 if errorlevel 1 (
     set STATUS_4=FAILED
     set /a FAIL_COUNT+=1
@@ -84,7 +84,7 @@ echo.
 echo ============================================================
 echo  5 of 9 ^| Transformer/LSTM/MLP encoder ablation
 echo ============================================================
-call run_transformer_lstm_mlp_ablation.bat
+call "%~dp0run_transformer_lstm_mlp_ablation.bat"
 if errorlevel 1 (
     set STATUS_5=FAILED
     set /a FAIL_COUNT+=1
@@ -97,7 +97,7 @@ echo.
 echo ============================================================
 echo  6 of 9 ^| Factor stress: partial obs known dyn + full obs unknown dyn
 echo ============================================================
-call run_factor_stress_ablation.bat
+call "%~dp0run_factor_stress_ablation.bat"
 if errorlevel 1 (
     set STATUS_6=FAILED
     set /a FAIL_COUNT+=1
@@ -110,7 +110,7 @@ echo.
 echo ============================================================
 echo  7 of 9 ^| N=40 and N=100 policy comparisons
 echo ============================================================
-call "%ROOT%run_all_policies_N40_N100.bat"
+call "%~dp0run_all_policies_N40_N100.bat"
 if errorlevel 1 (
     set STATUS_7=FAILED
     set /a FAIL_COUNT+=1
@@ -122,7 +122,7 @@ echo.
 echo ============================================================
 echo  8 of 9 ^| Transfer inference timing
 echo ============================================================
-call "%ROOT%run_transfer_timing.bat"
+call "%~dp0run_transfer_timing.bat"
 if errorlevel 1 (
     set STATUS_8=FAILED
     set /a FAIL_COUNT+=1
@@ -134,7 +134,7 @@ echo.
 echo ============================================================
 echo  9 of 9 ^| Actor ablation
 echo ============================================================
-call "%ROOT%run_actor_ablation.bat"
+call "%~dp0run_actor_ablation.bat"
 if errorlevel 1 (
     set STATUS_9=FAILED
     set /a FAIL_COUNT+=1

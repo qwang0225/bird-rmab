@@ -1,5 +1,11 @@
 # BIRD: Belief-Encoder Index Restless Diffusion
 
+BIRD addresses partially observable restless multi-armed bandits, where a limited
+intervention budget must be allocated across arms with hidden states and unknown dynamics. A shared history encoder and per-arm diffusion actor
+generate priority scores, and top-K selection enforces the budget. The paper
+connects score-space policy mirror descent to updates over feasible actions
+and evaluates the method on synthetic and MIMIC-derived simulators.
+
 ## Setup
 
 ```bat
@@ -14,7 +20,7 @@ files if Anaconda is installed in a different location.
 From the `BIRD` directory:
 
 ```bat
-run_all.bat
+scripts\run_all.bat
 ```
 
 The runner performs these steps:
@@ -54,17 +60,17 @@ checks saved weights, not training convergence.
 
 | Script | Experiment | Training behavior |
 | --- | --- | --- |
-| `run_main_experiments.bat` | Main comparisons and Markov2 | Train missing baselines |
-| `run_all_policies_N40_N100.bat` | N=40, K=10 and N=100, K=25 comparisons | Reuse N=20, K=5 baselines; train if missing |
-| `run_actor_ablation.bat` | Actor architecture: MLP, joint diffusion, Gaussian, BIRD | Retrain variants |
-| `run_aux_ablation_experiments.bat` | Auxiliary prediction loss | Retrain variants |
-| `run_critic_ablation_experiments.bat` | Critic architecture | Retrain variants |
-| `run_window_l_ablation.bat` | History length | Retrain variants |
-| `run_transformer_lstm_mlp_ablation.bat` | Belief encoder | Retrain variants |
-| `run_factor_stress_ablation.bat` | Observation and dynamics uncertainty | Retrain variants |
-| `run_transfer_timing.bat` | Inference timing | Train missing BIRD checkpoints |
+| `scripts\run_main_experiments.bat` | Main comparisons and Markov2 | Train missing baselines |
+| `scripts\run_all_policies_N40_N100.bat` | N=40, K=10 and N=100, K=25 comparisons | Reuse N=20, K=5 baselines; train if missing |
+| `scripts\run_actor_ablation.bat` | Actor architecture: MLP, joint diffusion, Gaussian, BIRD | Retrain variants |
+| `scripts\run_aux_ablation_experiments.bat` | Auxiliary prediction loss | Retrain variants |
+| `scripts\run_critic_ablation_experiments.bat` | Critic architecture | Retrain variants |
+| `scripts\run_window_l_ablation.bat` | History length | Retrain variants |
+| `scripts\run_transformer_lstm_mlp_ablation.bat` | Belief encoder | Retrain variants |
+| `scripts\run_factor_stress_ablation.bat` | Observation and dynamics uncertainty | Retrain variants |
+| `scripts\run_transfer_timing.bat` | Inference timing | Train missing BIRD checkpoints |
 
-All ablation launchers are included in `run_all.bat` and retrain their variants
+All ablation launchers are included in `scripts\run_all.bat` and retrain their variants
 by default. Checkpoints and results are saved in the corresponding environment's
 variant and ablation directories. Boundary diagnostic scripts are in `plot/`
 and require trained checkpoints.

@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 
-set ROOT=%~dp0
+set "ROOT=%~dp0..\"
 python "%ROOT%train_missing.py" --scope timing
 if errorlevel 1 exit /b 1
 
